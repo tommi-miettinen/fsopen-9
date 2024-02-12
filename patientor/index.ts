@@ -21,20 +21,34 @@ app.get("/api/ping", (_req, res) => {
   res.send("pong");
 });
 
-type Patient = {
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface Entry {}
+
+type Gender = "male" | "female";
+
+export interface Patient {
   id: string;
   name: string;
-  dateOfBirth: string;
-  gender: string;
-  occupation: string;
   ssn: string;
-};
+  occupation: string;
+  gender: Gender;
+  dateOfBirth: string;
+  entries: Entry[];
+}
 
-type PatientNoSsn = Omit<Patient, "ssn">;
+export type NonSensitivePatient = Omit<Patient, "ssn" | "entries">;
 
 app.get("/api/patients", (_req, res) => {
-  const payload: PatientNoSsn[] = patients.map(({ ssn, ...rest }) => rest);
+  const payload = patients.map(({ ssn, ...rest }) => rest);
   res.json(payload);
+});
+
+app.get("/api/patients/:id", (req, res) => {
+  const patient = patients.find((p) => p.id === req.params.id);
+  if (!patient) {
+    return res.status(404).send("Patient not found");
+  }
+  return res.json(patient);
 });
 
 app.post("/api/patients", (req, res) => {
